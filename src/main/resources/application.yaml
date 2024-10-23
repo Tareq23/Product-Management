@@ -15,3 +15,7 @@ spring:
     console:
       enabled: true
       path: /h2-db
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.H2Dialect
