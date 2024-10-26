@@ -1,9 +1,11 @@
 package com.qtec.pm.application.controller;
 
 
+import com.qtec.pm.application.dto.PageSortDto;
 import com.qtec.pm.application.dto.ProductDto;
 import com.qtec.pm.application.service.ProductApplicationServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +28,13 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public List<ProductDto> getAllProducts(){
-        return productApplicationService.findAllProducts();
+    public ResponseEntity<Object> getAllProducts(@ModelAttribute PageSortDto pageSortDto){
+
+        if(pageSortDto != null){
+            return ResponseEntity.ok().body(productApplicationService.findAllProducts(pageSortDto));
+        }
+
+        return ResponseEntity.ok().body(productApplicationService.findAllProducts(pageSortDto));
     }
 
     @GetMapping("/products/{id}")

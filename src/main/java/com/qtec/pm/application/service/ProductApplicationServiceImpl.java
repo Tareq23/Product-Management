@@ -1,12 +1,22 @@
 package com.qtec.pm.application.service;
 
+import com.qtec.pm.application.dto.DiscountProductDto;
+import com.qtec.pm.application.dto.PageSortDto;
 import com.qtec.pm.application.dto.ProductDto;
 import com.qtec.pm.application.exception.ProductNotFoundException;
+import com.qtec.pm.application.utility.CommonUtility;
 import com.qtec.pm.domain.entity.Product;
+import com.qtec.pm.domain.repository.ProductRepository;
 import com.qtec.pm.domain.service.ProductDomainService;
-import com.qtec.pm.infrastructure.ProductRepository;
+import com.qtec.pm.domain.valueobject.Category;
+import com.qtec.pm.domain.valueobject.Discount;
+import com.qtec.pm.domain.valueobject.Price;
+import com.qtec.pm.domain.valueobject.StockQuantity;
+import com.qtec.pm.infrastructure.ProductJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,7 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductApplicationServiceImpl implements ProductDomainService {
 
-    private final ProductRepository repository;
+    private final CommonUtility commonUtility;
+
+    private final ProductJpaRepository repository;
 
     @Override
     public Void createProduct(ProductDto productDto) {
@@ -26,10 +38,12 @@ public class ProductApplicationServiceImpl implements ProductDomainService {
         }
         Product product = new Product(
                 productDto.getName(),
-                productDto.getCategory(),
+                new Category(productDto.getCategory()),
                 productDto.getDescription(),
-                productDto.getPrice(),
-                productDto.getStockQuantity());
+                new Price(productDto.getPrice()),
+                new StockQuantity(productDto.getStockQuantity()),
+                new Discount(productDto.getPercentage())
+        );
         repository.save(product);
         return null;
     }
@@ -47,13 +61,15 @@ public class ProductApplicationServiceImpl implements ProductDomainService {
             if(productDto.getName() != null)
                 e.setName(productDto.getName());
             if(productDto.getCategory() != null)
-                e.setCategory(productDto.getCategory());
+                e.setCategory(new Category(productDto.getCategory()));
             if(productDto.getDescription() != null)
                 e.setDescription(productDto.getDescription());
             if(productDto.getPrice() != null)
-                e.setPrice(productDto.getPrice());
+                e.setPrice(new Price(productDto.getPrice()));
             if(productDto.getStockQuantity() != null)
-                e.setStockQuantity(productDto.getStockQuantity());
+                e.setStockQuantity(new StockQuantity(productDto.getStockQuantity()));
+            if(productDto.getPercentage() != null)
+                e.setDiscount(new Discount(productDto.getPercentage()));
             repository.save(e);
         });
 
@@ -74,7 +90,7 @@ public class ProductApplicationServiceImpl implements ProductDomainService {
         if(product.isEmpty()) throw new ProductNotFoundException("Product not found for id: "+id);
 
         product.ifPresent(e -> {
-            e.setStockQuantity(stockQuantity);
+            e.setStockQuantity(new StockQuantity(stockQuantity));
             repository.save(e);
         });
         return convertToDto(product.get());
@@ -87,26 +103,27 @@ public class ProductApplicationServiceImpl implements ProductDomainService {
         return product.map(this::convertToDto);
     }
 
+
+
+
     @Override
-    public List<ProductDto> findAllProducts() {
-        return repository.findAll().stream().map(product -> {
-            return new ProductDto(
-                    product.getName(),
-                    product.getDescription(),
-                    product.getPrice(),
-                    product.getStockQuantity(),
-                    product.getCategory()
-            );
-        }).collect(Collectors.toList());
+    public Page<ProductDto> findAllProducts(PageSortDto pageSortDto) {
+
+        Pageable pageable = commonUtility.createPageable(pageSortDto.getPage(),
+                pageSortDto.getSize(),
+                pageSortDto.getSortBy(),
+                pageSortDto.getSortDirection());
+        return repository.findAll(pageable).map(this::convertToDto);
     }
 
     private ProductDto convertToDto(Product product) {
-        return new ProductDto(
+        return new DiscountProductDto(
                 product.getName(),
                 product.getDescription(),
-                product.getPrice(),
-                product.getStockQuantity(),
-                product.getCategory()
+                product.getPrice().getPrice(),
+                product.getStockQuantity().getQuantity(),
+                product.getCategory().getName(),
+                product.getDiscount().getPercentage()
         );
     }
 }

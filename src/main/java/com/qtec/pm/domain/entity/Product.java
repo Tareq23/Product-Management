@@ -1,6 +1,10 @@
 package com.qtec.pm.domain.entity;
 
 
+import com.qtec.pm.domain.valueobject.Category;
+import com.qtec.pm.domain.valueobject.Discount;
+import com.qtec.pm.domain.valueobject.Price;
+import com.qtec.pm.domain.valueobject.StockQuantity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +23,29 @@ public class Product {
     private String name;
     @Lob
     private String description;
-    private BigDecimal price;
-    private Integer stockQuantity;
-    private String category;
+
+    @Embedded
+    private Price price;
+
+    @Embedded
+    private StockQuantity stockQuantity;
+
+    @Embedded
+    private Category category;
+
+    @Embedded
+    private Discount discount;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Product(String name, String category, String description, BigDecimal price, Integer stockQuantity){
+    public Product(String name, Category category, String description, Price price, StockQuantity stockQuantity, Discount discount){
         this.name = name;
         this.category = category;
         this.description = description;
         this.price = price;
         this.stockQuantity = stockQuantity;
+        this.discount = discount;
     }
 
     public Product() {
@@ -47,4 +62,6 @@ public class Product {
     protected void onUpdate(){
         updatedAt = LocalDateTime.now();
     }
+
+
 }
