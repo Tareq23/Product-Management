@@ -7,15 +7,24 @@ spring:
   application:
     name: Product Management
   datasource:
-    url: jdbc:h2:mem:product-management
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/product_management
     username: root
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-db
+    password: 12x34y56z
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:h2:mem:product-management
+#    driver-class-name: org.h2.Driver
+#    username: root
+#    password:
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-db
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.H2Dialect
+#    database-platform: org.hibernate.dialect.H2Dialect
+
+product:
+  order:
+    minimum: 1
+    maximum: 5
